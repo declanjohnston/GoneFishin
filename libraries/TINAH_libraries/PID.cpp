@@ -43,3 +43,8 @@ void PID::run(int xpos){
   	count = count + 1;
   	lstate=state;
 }
+
+void PID::stop(){
+	motor.speed(leftMotor,0);
+  	motor.speed(rightMotor,0);
+}
