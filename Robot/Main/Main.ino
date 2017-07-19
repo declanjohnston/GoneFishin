@@ -21,12 +21,12 @@ byte QRD_RIGHT;
 int ENCODER_TURN;
 int ENCODER_RAISEARM;
 int ENCODER_LOWERARM;
-int ENCODER_ZIPLINE;
 int ENCODER_LIFTPIN;
 int ENCODER_ARMPIN;
-int ENCODER_FINAL;
 byte TOTAL_HASHES;
 byte SWITCH_ZIPLINE;
+byte SWITCH_LIFTUP;
+byte SWITCH_LIFTDOWN;
 
 int state;
 int lstate;
@@ -86,6 +86,9 @@ void loop()
       while(digitalRead(ENCODER_LIFTPIN) == LOW){}
       while(digitalRead(ENCODER_LIFTPIN) == HIGH){}
       encoderCount++;
+      if(digitalRead(SWITCH_LIFTUP) == LOW || digitalRead(SWITCH_LIFTUP) == LOW){
+        break;
+      }
  }
  motor.speed(MOTOR_LIFT,0);
 
@@ -106,6 +109,9 @@ void loop()
       while(digitalRead(ENCODER_LIFTPIN) == LOW){}
       while(digitalRead(ENCODER_LIFTPIN) == HIGH){}
       encoderCount++;
+      if(digitalRead(SWITCH_LIFTUP) == LOW || digitalRead(SWITCH_LIFTUP) == LOW){
+        break;
+      }
  }
  motor.speed(MOTOR_LIFT, 0);
 
@@ -129,11 +135,7 @@ void loop()
  // raise arm to zipline
  encoderCount = 0;
  motor.speed(MOTOR_LIFT, 255);
- while(encoderCount < ENCODER_ZIPLINE - ENCODER_RAISEARM + ENCODER_LOWERARM){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){}
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){}
-      encoderCount++;
- }
+ while(digitalRead(SWITCH_LIFTUP) == HIGH && digitalRead(SWITCH_LIFTUP) == HIGH){}
  motor.speed(MOTOR_LIFT,0);
 
  // drive to zipline
@@ -146,10 +148,8 @@ void loop()
  // raise body
  encoderCount = 0;
  motor.speed(MOTOR_LIFT, -255);
- while(encoderCount < ENCODER_FINAL){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){}
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){}
-      encoderCount++;
+
+ while(digitalRead(SWITCH_LIFTDOWN) == LOW){    
  }
  motor.speed(MOTOR_LIFT, 0);
 }

@@ -3,15 +3,15 @@
     int leftSen, rightSen;
     int state;
     int D;
-    int G;
+    int G = 1;
     int P;
-    int threshold = 50;
-    byte LEFTPIN = 0;
-    byte RIGHTPIN = 5;
+    int threshold = 100;
+    byte LEFTPIN = 3;
+    byte RIGHTPIN = 1;
     bool left;
     bool right;
     byte count = 100;
-    int Speed = 350;
+    int Speed = 255;
     int lstate = 0;
     int recerr = 0;
     int q = 1;
@@ -19,6 +19,8 @@
     int p;
     int d;
     int cor;
+    byte MOTOR_RIGHT = 1;
+    byte MOTOR_LEFT = 2;
     
 void setup()
 {
@@ -38,8 +40,8 @@ void loop() {
   rightSen = analogRead(RIGHTPIN);
   //Printing to screen and reading knob values
   if(count == 100){
-    D= knob(7)/5;
-    P= knob(6)/5;
+    D = knob(7)/5;
+    P = knob(6)/5;
     LCD.clear();
     LCD.home();
     LCD.print("l=");
@@ -92,8 +94,8 @@ void loop() {
   d=(int)((float)D*(float)(state-recerr)/(float)(q+m));
   cor = G*(p+d);
   // Writing to motors
-  motor.speed(1,Speed+cor);
-  motor.speed(0,Speed-cor);
+  motor.speed(MOTOR_RIGHT,Speed+cor);
+  motor.speed(MOTOR_LEFT,Speed-cor);
   
   m=m+1;
   count = count + 1;
