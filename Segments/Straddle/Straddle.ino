@@ -71,9 +71,9 @@ void loop() {
     right =  false;
   }
   // Determining the state
-  if(left && right) state = 0;
-  if(left && !right) state = 1;
-  if(!left && right) state = -1;
+  if(left && right) state = -1;
+  if(left && !right) state = 0;
+  if(!left && right) state = -3;
   if(!left && !right){
     if(lstate<0){ // lstateis the most recent state of the system, allows the robot to decide which side it is on
       state = -5;

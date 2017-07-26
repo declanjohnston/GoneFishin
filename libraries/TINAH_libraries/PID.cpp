@@ -19,6 +19,7 @@ void PID::init(int derivative, int integral, int proportional, int gain, int set
 	Speed = setSpeed;
 	leftMotor = motorLeft;
 	rightMotor = motorRight;
+	i=0;
 		
 }
 
@@ -34,7 +35,8 @@ void PID::run(int xpos){
   	// Calculations of correction
   	p=P*state;
   	d=(int)((float)D*(float)(state-recerr)/(float)(q+m));
-  	cor = G*(p+d);
+	i= i+state*I;
+  	cor = G*(p+d+i);
   	// Writing to motors
   	motor.speed(leftMotor,Speed+cor);
   	motor.speed(rightMotor,Speed-cor);

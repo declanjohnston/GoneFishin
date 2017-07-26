@@ -35,5 +35,6 @@ class PID
 		int rightMotor;
 		int leftMotor;
     	int cor;
+		float i;
 };
 #endif
