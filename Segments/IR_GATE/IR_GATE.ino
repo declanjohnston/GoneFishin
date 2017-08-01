@@ -70,7 +70,7 @@ void loop()
  LCD.print(analogRead(IRPIN_RIGHT));
  // wait for IR signal
  while(!irFlag){
-  if(analogRead(IRPIN_LEFT) < THRESH_IR && analogRead(IRPIN_RIGHT) < THRESH_IR) {
+  if(analogRead(IRPIN_LEFT) < 100 && analogRead(IRPIN_RIGHT) < 100) {
     LCD.setCursor(1,2);
     LCD.print(analogRead(IRPIN_LEFT));
     LCD.print(" ");
@@ -78,7 +78,7 @@ void loop()
    
     break;
   }
-  } 
+ } 
  LCD.print(" ");
  LCD.print("Done");
  exit(0);
