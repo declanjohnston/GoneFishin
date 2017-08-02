@@ -41,7 +41,6 @@ void setup()
   BounceSwitchZipline.attach(SWITCH_ZIPLINE);
 }
 void loop() {
-   // raise arm to zipline
  flag = false;
  digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
  digitalWrite(MOTOR_LIFT_ON, HIGH);
@@ -51,30 +50,20 @@ void loop() {
  }
 
  digitalWrite(MOTOR_LIFT_ON, LOW);
- pid.init(0,1,35,1,255, MOTOR_LEFT, MOTOR_RIGHT);
- LCD.print("a");
- motor.speed(MOTOR_RIGHT,140);
- motor.speed(MOTOR_LEFT, 110);
- BounceSwitchZipline.update();
- while(!BounceSwitchZipline.read()){
-   BounceSwitchZipline.update();
- }
- pid.stop();
- LCD.print("b");
- // raise body
- digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
- digitalWrite(MOTOR_LIFT_ON, HIGH); 
 
+ encoderCount = 0;
+ digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
+ digitalWrite(MOTOR_LIFT_ON, HIGH);
  BounceLiftDown.attach(SWITCH_LIFTDOWN);
  BounceLiftDown.update();
- while(true){
-  while(!BounceLiftDown.read()){
-    digitalWrite(MOTOR_LIFT_ON, HIGH);
+ while(encoderCount < ENCODER_LOWERARM && !BounceLiftDown.read()){
+    BounceEncoder.update();
+    if(BounceEncoder.rose()){
+      encoderCount++;
+      LCD.clear();
+      LCD.print(encoderCount);
+    }
     BounceLiftDown.update();
-  }
-  digitalWrite(MOTOR_LIFT_ON, LOW);
-  BounceLiftDown.update();
-  
  }
-
+ digitalWrite(MOTOR_LIFT_ON, LOW);
 }

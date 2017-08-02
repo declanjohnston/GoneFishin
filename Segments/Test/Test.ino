@@ -33,6 +33,9 @@ void loop() {
 //LCD.print(analogRead(1));
 //
 //  delay(100);
+   digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
+   digitalWrite(MOTOR_LIFT_ON, HIGH);
+   
   LiftUpBounce.update();
   while(!LiftUpBounce.read()){
     LiftUpBounce.update();
@@ -90,8 +93,13 @@ void loop() {
  motor.speed(MOTOR_ARM, 0);
  LCD.print(" ");
  LCD.print("b");
+ 
+ 
  LiftDownBounce.attach(SWITCH_LIFTDOWN);
  LiftDownBounce.update();
+ digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
+ digitalWrite(MOTOR_LIFT_ON, HIGH);
+ 
  while(encoderCount < ENCODER_LOWERARM && !LiftDownBounce.read()){
     encoderBounce.update();
     if(encoderBounce.rose()){
