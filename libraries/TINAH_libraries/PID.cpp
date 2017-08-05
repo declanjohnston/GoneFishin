@@ -46,6 +46,30 @@ void PID::run(int xpos){
   	lstate=state;
 }
 
+void PID::tank(int xpos){
+	state = xpos;
+
+	if (!(state==lstate))
+ 	{
+     		recerr=lstate;
+     		q=m;
+    		m=1;
+  	}
+  	// Calculations of correction
+  	p=P*state;
+  	d=(int)((float)D*(float)(state-recerr)/(float)(q+m));
+	i= i+state*I;
+  	cor = G*(p+d+i);
+  	// Writing to motors
+  	motor.speed(leftMotor,Speed+cor);
+  	motor.speed(rightMotor,Speed-cor);
+  
+  	m=m+1;
+  	count = count + 1;
+  	lstate=state;
+}
+
+
 void PID::stop(){
 	motor.speed(leftMotor,0);
   	motor.speed(rightMotor,0);

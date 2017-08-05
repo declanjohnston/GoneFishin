@@ -15,6 +15,8 @@ class PID
 
 		void run(int xpos);
 		
+		void tank(int xpos);
+		
 		void stop();
 
 	private:

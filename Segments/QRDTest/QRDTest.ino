@@ -20,7 +20,6 @@ int count;
 Bounce BounceLiftUp = Bounce();
 Bounce BounceLiftDown = Bounce();
 Bounce BounceSwitchZipline = Bounce();
-Bounce BounceEncoder = Bounce();
 
 PID pid=PID(motor);
 State pos=State(QRD_LEFT, QRD_RIGHT,THRESH_QRD, QRD_CIRCLE_LEFT);
@@ -40,34 +39,15 @@ void setup()
   BounceLiftDown.attach(SWITCH_LIFTDOWN);
   BounceSwitchZipline.interval(3);
   BounceSwitchZipline.attach(SWITCH_ZIPLINE);
-  BounceEncoder.interval(3);
-  BounceEncoder.attach(ENCODER_LIFTPIN);
 }
 void loop() {
- flag = false;
- digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
- digitalWrite(MOTOR_LIFT_ON, HIGH);
- BounceLiftUp.update();
- while(!BounceLiftUp.read()){
-  BounceLiftUp.update();
- }
+  // put your main code here, to run repeatedly:
 
- digitalWrite(MOTOR_LIFT_ON, LOW);
+  LCD.clear();
+  LCD.home();
+  LCD.print(analogRead(QRD_CIRCLE_RIGHT));
+  LCD.print(" ");
+  LCD.print(analogRead(QRD_CIRCLE_LEFT));
+  delay(300);
 
- encoderCount = 0;
- digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
- digitalWrite(MOTOR_LIFT_ON, HIGH);
- BounceLiftDown.attach(SWITCH_LIFTDOWN);
- BounceLiftDown.update();
- while(encoderCount < ENCODER_LOWERARM && !BounceLiftDown.read()){
-    BounceEncoder.update();
-    if(BounceEncoder.rose()){
-      encoderCount++;
-      LCD.clear();
-      LCD.print(encoderCount);
-    }
-    BounceLiftDown.update();
- }
- digitalWrite(MOTOR_LIFT_ON, LOW);
- exit(0);
 }
