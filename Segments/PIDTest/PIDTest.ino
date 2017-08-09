@@ -32,7 +32,7 @@ void setup()
   initPins();
   // remember to initialize values
   // derivative, integral, proportional,gain, speed
-  pid.init(20,0,35,1,255, MOTOR_LEFT, MOTOR_RIGHT);
+  pid.init(20,0.3,60,1,255, MOTOR_LEFT, MOTOR_RIGHT);
   BounceLiftUp.interval(3);
   BounceLiftUp.attach(SWITCH_LIFTUP);
   BounceLiftDown.interval(3);
@@ -40,14 +40,9 @@ void setup()
   BounceSwitchZipline.interval(3);
   BounceSwitchZipline.attach(SWITCH_ZIPLINE);
 }
-void loop() {
-  // put your main code here, to run repeatedly:
-
-  LCD.clear();
-  LCD.home();
-  LCD.print(analogRead(IRPIN_RIGHT));
-  LCD.print(" ");
-  LCD.print(analogRead(IRPIN_LEFT));
-  delay(300);
-
+void loop(){
+  state = pos.get();
+  pid.run(state);
+  
 }
+

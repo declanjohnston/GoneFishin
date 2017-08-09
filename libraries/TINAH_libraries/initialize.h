@@ -22,7 +22,7 @@
 #define QRD_OUTER_LEFT 6
 #define ENCODER_RAISEARM 1000
 #define ENCODER_LOWERARM 25 // 26 for static encouragers
-#define TOTAL_HASHES 13 // might need to change maybe 8
+#define TOTAL_HASHES 12 // might need to change maybe 8
 #define SWITCH_ZIPLINE 11
 #define SWITCH_LIFTUP 14
 #define SWITCH_LIFTDOWN 9
@@ -31,7 +31,7 @@
 #define SWITCH_TRACK 15
 #define SWITCH_LIFTMID 8
 #define CAR_WASH 6
-
+#define SWITCH_SIDE 15
 
 
 void initPins(){

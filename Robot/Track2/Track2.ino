@@ -140,16 +140,16 @@ void loop() {
       state = circle.get();
       pid.run(state);
     }
-//    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
-//      state = circle.get();
-//      if(state > 0){state = 0;}
-//      if(state == -1) {state = -2;}
-//      pid.run(state);
-//    }
-//  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
-//      state = circle.get();
-//      pid.run(state);
-//    }
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+    }
+  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
 
  pid.stop();
  LCD.print("d");
@@ -196,7 +196,7 @@ void loop() {
 
 
 
- pid.init(15, .01, 30, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
+ pid.init(15, .01, 30, 1, 160, MOTOR_LEFT, MOTOR_RIGHT);
  circle.lstate = -1; //in case robot came off tape while reversing
  while(hashCount < TOTAL_HASHES){
 //  state = circle.get();
@@ -250,12 +250,12 @@ void loop() {
   }
 
 
-//  while(millis() < timer + 300){
-//   state = circle.get();
-//  if(state > 0){state = 0;}
-//  if(state == -1) {state = -2;}
-//    pid.run(state);
-//  }
+  while(millis() < timer + 300){
+   state = circle.get();
+  if(state > 0){state = 0;}
+  if(state == -1) {state = -2;}
+    pid.run(state);
+  }
  pid.stop();
  
  zipline();
@@ -324,8 +324,8 @@ void zipline(){
     digitalWrite(MOTOR_LIFT_ON, HIGH);
     BounceLiftDown.update();
     if(millis() > timer + 3000){
-      motor.speed(MOTOR_LEFT, 255);
-      motor.speed(MOTOR_RIGHT, 255);
+      motor.speed(MOTOR_LEFT, -255);
+      motor.speed(MOTOR_RIGHT, -255);
     }
   }
   digitalWrite(MOTOR_LIFT_ON, LOW);

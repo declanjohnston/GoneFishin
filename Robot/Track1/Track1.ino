@@ -140,16 +140,16 @@ void loop() {
       state = circle.get();
       pid.run(state);
     }
-//    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
-//      state = circle.get();
-//      if(state > 0){state = 0;}
-//      if(state == -1) {state = -2;}
-//      pid.run(state);
-//    }
-//  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
-//      state = circle.get();
-//      pid.run(state);
-//    }
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+    }
+  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
 
  pid.stop();
  LCD.print("d");
@@ -269,8 +269,8 @@ void turn() {
   //motor.speed(MOTOR_RIGHT, 50); // ONLY FOR 2
   delay(200);
   LCD.print("flag");
-  //while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {} // ONLY FOR 1  
-  //while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {} //ONLY FOR 1
+  while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {} // ONLY FOR 1  
+  while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {} //ONLY FOR 1
   while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {}  
   while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {}
     
@@ -303,8 +303,8 @@ void zipline(){
  motor.speed(MOTOR_ARM, 0);
  
  LCD.print("a");
- motor.speed(MOTOR_RIGHT,140);
- motor.speed(MOTOR_LEFT, 130);
+ motor.speed(MOTOR_RIGHT,100);
+ motor.speed(MOTOR_LEFT, 150);
  BounceSwitchZipline.attach(SWITCH_ZIPLINE);
  BounceSwitchZipline.update();
  while(!BounceSwitchZipline.read()){

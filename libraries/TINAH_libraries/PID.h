@@ -11,7 +11,7 @@ class PID
 		//constructor
 		PID(motorClass motorIn);
 
-		void init(int derivative, int integral, int proportional, int gain, int setSpeed, int motorLeft, int motorRight);
+		void init(int derivative, float integral, int proportional, int gain, int setSpeed, int motorLeft, int motorRight);
 
 		void run(int xpos);
 		
@@ -23,7 +23,7 @@ class PID
 		motorClass motor;
 		int state;
     	int D;
-		int I;
+		float I;
 		int G;
 		int P;
     	byte count;

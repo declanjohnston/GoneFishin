@@ -6,7 +6,7 @@ PID::PID(motorClass motorIn){
 	motor=motorIn;
 }
 
-void PID::init(int derivative, int integral, int proportional, int gain, int setSpeed, int motorLeft, int motorRight){
+void PID::init(int derivative, float integral, int proportional, int gain, int setSpeed, int motorLeft, int motorRight){
 	D=derivative;
 	I=integral;
 	P=proportional;
