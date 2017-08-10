@@ -32,7 +32,7 @@ void setup()
   initPins();
   // remember to initialize values
   // derivative, integral, proportional,gain, speed
-  pid.init(20,0.3,60,1,255, MOTOR_LEFT, MOTOR_RIGHT);
+  pid.init(25,0,55,1,255, MOTOR_LEFT, MOTOR_RIGHT);
   BounceLiftUp.interval(3);
   BounceLiftUp.attach(SWITCH_LIFTUP);
   BounceLiftDown.interval(3);

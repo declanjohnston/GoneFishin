@@ -1,27 +1,41 @@
-#include <phys253.h>
-#include <LiquidCrystal.h>
-#include <PID.h>
-#include <State.h>
-#include <initialize.h>
 
-
-
-
-int state;
-int lstate;
-bool left;
-bool right;
-int timer;
-int encoderCount = 0;
-bool flag;
-int hashCount = 0;
-int count;
-bool irFlag = false;
 
 void high();
 void low();
 void turnLow();
 void turnHigh();
+#include <phys253.h>
+#include <LiquidCrystal.h>
+#include <PID.h>
+#include <State.h>
+#include <initialize.h>
+#include <Bounce2.h>
+
+void one();
+void two();
+void turnOne();
+void turnTwo();
+void turn();
+void ziplineTwo();
+void ziplineOne();
+
+int state;
+int lstate;
+bool left;
+bool right;
+long timer;
+
+bool flag;
+int hashCount = 0;
+int count;
+bool irFlag = false;
+Bounce BounceLiftMid = Bounce();
+Bounce BounceLiftUp = Bounce();
+Bounce BounceLiftDown = Bounce();
+Bounce BounceSwitchZipline = Bounce();
+Bounce BounceSwitchArm = Bounce();
+Bounce BounceSwitchArm2 = Bounce();
+Bounce BounceSwitchSide = Bounce();
 
 PID pid = PID(motor);
 State pos = State(QRD_LEFT, QRD_RIGHT, THRESH_QRD, QRD_CIRCLE_LEFT);
@@ -34,9 +48,19 @@ void setup()
   initPins();
   // remember to initialize values
   // derivative, integral, proportional,gain, speed
-  pid.init(23, 0.38, 68, 1, 255, MOTOR_LEFT, MOTOR_RIGHT);
-
+  pid.init(25, 0, 55, 1, 255, MOTOR_LEFT, MOTOR_RIGHT);
+  BounceLiftMid.interval(3);
+  BounceLiftUp.interval(3);
+  BounceLiftDown.interval(3);
+  BounceLiftUp.attach(SWITCH_LIFTUP);
+  BounceLiftDown.attach(SWITCH_LIFTDOWN);
+  BounceSwitchZipline.interval(3);
+  BounceSwitchArm.interval(3);
+  BounceSwitchArm2.interval(3);
+  BounceSwitchSide.interval(3);
+  BounceSwitchSide.attach(SWITCH_SIDE);
 }
+
 
 void loop(){
  LCD.clear();
@@ -49,14 +73,14 @@ void loop(){
     LCD.home();
     LCD.print("Track 1");
     while(!startbutton());
-    high();
+    one();
  }
  else{
     LCD.clear();
     LCD.home();
-    LCD.print("Track 0");
+    LCD.print("Track 2");
     while(!startbutton());
-    low();
+    two();
  }
  exit(0);
 }
@@ -73,16 +97,23 @@ void turnLow() {
   pid.run(-5);
 }
 
-void low(){
+void two(){
+ LCD.clear();
+ LCD.home();
+ LCD.print("Waiting to start");
+ while(!startbutton());
+ delay(500);
  LCD.clear();
  // drive up to IR gate
  timer = millis();
  //while(millis() < timer + THRESH_TIMER){ 
+ while(millis() < timer + THRESH_TIMER){ 
+  state = pos.get();
+  pid.run(state);
+ }
+ pid.stop();
  count = 0;
- 
  while(analogRead(IRPIN_LEFT) < THRESH_IR && analogRead(IRPIN_RIGHT) < THRESH_IR){
-      state = pos.get();
-      pid.run(state);
       if(count == 10){
         LCD.clear();
         LCD.home();
@@ -92,200 +123,205 @@ void low(){
         count = 0;
       }
       count++;
-      if(millis() > timer + THRESH_TIMER){
-        irFlag = true;
-        LCD.print(" ");
-        LCD.print("break 1");
-        break;
-      }
  }
- pid.stop();
  LCD.print(analogRead(IRPIN_LEFT));
  LCD.print(" ");
  LCD.print(analogRead(IRPIN_RIGHT));
  // wait for IR signal
- while(!irFlag){
-  if(analogRead(IRPIN_LEFT) < 100 && analogRead(IRPIN_RIGHT) < 100) {
-    LCD.setCursor(1,2);
-    LCD.print(analogRead(IRPIN_LEFT));
-    LCD.print(" ");
-    LCD.print(analogRead(IRPIN_RIGHT));
-   
-    break;
-  }
- } 
+ while(analogRead(IRPIN_LEFT) > 100 || analogRead(IRPIN_RIGHT) > 100){
+ }
+ LCD.clear();
   count = 0;
+
+
   // drive to tank
-  while (analogRead(QRD_OUTER_LEFT) < THRESH_QRD  && analogRead(QRD_OUTER_RIGHT)< THRESH_QRD) {
+  timer = millis();
+  while(millis() < timer + 6000){
     state = pos.get();
     pid.run(state);
-    if (count == 10) {
-      LCD.clear();
-      LCD.home();
-      LCD.print(analogRead(QRD_RIGHT));
-      LCD.print(" ");
-      LCD.print(analogRead(QRD_LEFT));
-      LCD.print(" ");
-      LCD.print(analogRead(QRD_OUTER_RIGHT));
-      count = 0;
-    }
-    count++;
   }
+  while (analogRead(QRD_OUTER_LEFT) < 300 && analogRead(QRD_OUTER_RIGHT)< 300) {
+    state = pos.get();
+    pid.run(state);
+//    if (count == 10) {
+//      LCD.clear();
+//      LCD.home();
+//      LCD.print(analogRead(QRD_RIGHT));
+//      LCD.print(" ");
+//      LCD.print(analogRead(QRD_LEFT));
+//      LCD.print(" ");
+//      LCD.print(analogRead(QRD_OUTER_RIGHT));
+//      count = 0;
+//    }
+//    count++;
+  }
+  LCD.print("turn");
   pid.stop();
   delay(400); //stops before it turns
-
+  BounceSwitchSide.attach(SWITCH_SIDE);
+  turnTwo();
   // turn corner
   LCD.clear();
   LCD.home();
-  LCD.print("Turning");
-
-  turnLow();
   LCD.clear();
   LCD.home();
   LCD.print("Done");
-  pid.init(20, 0, 50, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
+  pid.init(15, 0, 30, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
 
   //drive to first hashmark
   // might need to do left and right need to test this
   state=-5; //chage dont 5 dont know why
   circle.lstate=state;
-  pid.run(state);
-  while (analogRead(QRD_RIGHT) < THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  while (analogRead(QRD_RIGHT) > THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  while (analogRead(QRD_RIGHT) < THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  pid.stop();
 
+ while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+    }
+  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+     while(millis() < timer + 100){
+      state = circle.get();
+      pid.run(state);
+    }
+//    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+//      state = circle.get();
+//      if(state > 0){state = 0;}
+//      if(state == -1) {state = -2;}
+//      pid.run(state);
+//    }
+//  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+//      state = circle.get();
+//      pid.run(state);
+//    }
+
+ pid.stop();
+ LCD.print("d");
  LCD.clear();
  LCD.home();
+
+ // raise arm
  digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
  digitalWrite(MOTOR_LIFT_ON, HIGH);
- //while(digitalRead(SWITCH_LIFTUP) == LOW){}
- while(encoderCount < ENCODER_RAISEARM){
-   //while(true){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){
-         if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-            
-            LCD.print("a");
-            
-            break;
-        }
-      }
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){
-        if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-          
-          LCD.print("b");
-          
-          break;
-        }
-      }
-      if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-          if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-            digitalWrite(MOTOR_LIFT_ON, LOW);
-            LCD.print("switch");
-            LCD.print(digitalRead(SWITCH_LIFTUP));
-            LCD.print(" ");
-            LCD.print(digitalRead(SWITCH_LIFTDOWN));
-            break;
-          }
-          
-      }
-      encoderCount++;
-      LCD.clear();
-      LCD.home();
-      LCD.print(encoderCount);
-      
+ BounceLiftUp.update();
+ while(!BounceLiftUp.read()){
+  BounceLiftUp.update();
  }
- 
  digitalWrite(MOTOR_LIFT_ON, LOW);
  digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
- LCD.print(" ");
- LCD.print(encoderCount);
 
  // turn arm
- encoderCount = 0;
+ 
+ BounceSwitchArm.attach(SWITCH_ARM_1);
  motor.speed(MOTOR_ARM, 190);
+ BounceSwitchArm.update();
  //Arm is switches not encoder !!! Needs to change
- while(digitalRead(SWITCH_ARM_1) == LOW){
-//    if(digitalRead(SWITCH_ARM_2) == HIGH){
-//      break;
-//    }
+ while(!BounceSwitchArm.read()){
+    BounceSwitchArm.update();
  }
  motor.speed(MOTOR_ARM, 0);
 
+ digitalWrite(CAR_WASH, HIGH);
  // lower arm
- encoderCount = 0;
+
  digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
  digitalWrite(MOTOR_LIFT_ON, HIGH);
- while(encoderCount < ENCODER_LOWERARM){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){
-        if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           
-           
-          break;
-          
-        }
-      }
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){
-        if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           
-          break;
-        }
-      }
-      if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-         if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           digitalWrite(MOTOR_LIFT_ON, LOW);
-           LCD.print("siwtch2");
-           break;
-         }
-      }
-      encoderCount++;
-      LCD.clear();
-      LCD.home();
-      LCD.print(encoderCount);
-
+ BounceLiftDown.attach(SWITCH_LIFTDOWN);
+ BounceLiftDown.update();
+ BounceLiftMid.attach(SWITCH_LIFTMID);
+ BounceLiftMid.update();
+ while(!BounceLiftMid.read() && !BounceLiftDown.read()){
+    
+    BounceLiftMid.update();
+    BounceLiftDown.update();
  }
  digitalWrite(MOTOR_LIFT_ON, LOW);
  delay(400);
 
- pid.init(20, 0, 50, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
+
+
+ pid.init(15, .01, 30, 1, 150, MOTOR_LEFT, MOTOR_RIGHT);
+ circle.lstate = -1; //in case robot came off tape while reversing
+ while(hashCount < TOTAL_HASHES){
+//  state = circle.get();
+  
+//  pid.run(state);
  
- while(hashCount < 8){
-  state = circle.get();
-  if(state > 0){state = 0;}
-  if(state == -1) {state = -2;}
-  pid.run(state);
-  if((analogRead(QRD_RIGHT) > THRESH_QRD || analogRead(QRD_LEFT) > THRESH_QRD) && (analogRead(QRD_CIRCLE_RIGHT) > THRESH_QRD || analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) ){
-    delay(50);
-    hashCount++;
-    LCD.clear();
-    LCD.home();
-    LCD.print(hashCount);
-    state = -1;
-    circle.lstate = -1;
+    BounceSwitchSide.update();
+    while(!BounceSwitchSide.rose()){
+      state = circle.get();
+      if(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+        if(state > 0){state = 0;}
+        if(state == -1) {state = -2;}
+      }
+      if(state == 5){state = 2;}
+      pid.run(state);
+      BounceSwitchSide.update();
+    }
+    count = 1;
+    
+    while(!BounceSwitchSide.fell()){
+      state = circle.get();
+      if(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+        if(state > 0){state = 0;}
+        if(state == -1) {state = -2;}
+      }
+      if(state == 5){ state = 2;}
+      pid.run(state);
+      count++;
+      BounceSwitchSide.update();
+    }
+    while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+    count = 1;
+    delay(3);
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+      count++;
+    }
+    if(count >= 2){
+     hashCount++;
+     LCD.clear();
+     LCD.home();
+     LCD.print(hashCount);
+    }
+
   }
- }
+
+
+//  while(millis() < timer + 300){
+//   state = circle.get();
+//  if(state > 0){state = 0;}
+//  if(state == -1) {state = -2;}
+//    pid.run(state);
+//  }
  pid.stop();
+ 
+ ziplineTwo();
+ 
+ exit(0);
 }
 
-
-
-void turnHigh() {
-  motor.speed(MOTOR_LEFT, 200);
+void turnTwo(){
+    motor.speed(MOTOR_LEFT, 200);
   motor.speed(MOTOR_RIGHT, -100); // ONLY FOR 1
   //motor.speed(MOTOR_RIGHT, 50); // ONLY FOR 2
-  delay(100);
+  delay(200);
   LCD.print("flag");
-  while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {} 
-  while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {} 
+  //while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {} // ONLY FOR 1  
+  //while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {} //ONLY FOR 1
   while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {}  
   while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {}
     
@@ -293,20 +329,80 @@ void turnHigh() {
   pid.run(-5);
 }
 
+void ziplineTwo(){
+   // raise arm to zipline
+ flag = false;
+ digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
+ digitalWrite(MOTOR_LIFT_ON, HIGH);
+ BounceLiftUp.attach(SWITCH_LIFTUP);
+ BounceLiftUp.update();
+ while(!BounceLiftUp.read()){
+  BounceLiftUp.update();
+ }
 
-void high(){
- LCD.clear();
+ digitalWrite(MOTOR_LIFT_ON, LOW);
+
+ digitalWrite(CAR_WASH, LOW);
+  // turn arm
+ 
+ BounceSwitchArm2.attach(SWITCH_ARM_2);
+ BounceSwitchArm2.update();
+ motor.speed(MOTOR_ARM, -190);
+ //Arm is switches not encoder !!! Needs to change
+ while(!BounceSwitchArm2.read()){
+    BounceSwitchArm2.update();
+ }
+ motor.speed(MOTOR_ARM, 0);
+ 
+ LCD.print("a");
+ motor.speed(MOTOR_RIGHT,145);
+ motor.speed(MOTOR_LEFT, 140);
+ BounceSwitchZipline.attach(SWITCH_ZIPLINE);
+ BounceSwitchZipline.update();
+ while(!BounceSwitchZipline.read()){
+   BounceSwitchZipline.update();
+ }
+ pid.stop();
+ LCD.print("b");
+ // raise body
+ digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
+ digitalWrite(MOTOR_LIFT_ON, HIGH); 
+
+ BounceLiftDown.attach(SWITCH_LIFTDOWN);
+ BounceLiftDown.update();
+ timer = millis();
+ while(true){
+  while(!BounceLiftDown.read()){
+    digitalWrite(MOTOR_LIFT_ON, HIGH);
+    BounceLiftDown.update();
+//    if(millis() > timer + 3000){
+//      motor.speed(MOTOR_LEFT, -255);
+//      motor.speed(MOTOR_RIGHT, -255);
+//    }
+  }
+  digitalWrite(MOTOR_LIFT_ON, LOW);
+  BounceLiftDown.update();
+  
+ }
+}
+
+void one(){
+   LCD.clear();
  LCD.home();
-
+ LCD.print("Waiting to start");
+ while(!startbutton());
+ delay(500);
  LCD.clear();
  // drive up to IR gate
  timer = millis();
  //while(millis() < timer + THRESH_TIMER){ 
+ while(millis() < timer + THRESH_TIMER){ 
+  state = pos.get();
+  pid.run(state);
+ }
+ pid.stop();
  count = 0;
- 
  while(analogRead(IRPIN_LEFT) < THRESH_IR && analogRead(IRPIN_RIGHT) < THRESH_IR){
-      state = pos.get();
-      pid.run(state);
       if(count == 10){
         LCD.clear();
         LCD.home();
@@ -316,188 +412,278 @@ void high(){
         count = 0;
       }
       count++;
-      if(millis() > timer + THRESH_TIMER){
-        irFlag = true;
-        LCD.print(" ");
-        LCD.print("break 1");
-        break;
-      }
  }
- pid.stop();
  LCD.print(analogRead(IRPIN_LEFT));
  LCD.print(" ");
  LCD.print(analogRead(IRPIN_RIGHT));
  // wait for IR signal
- while(!irFlag){
-  if(analogRead(IRPIN_LEFT) < 100 && analogRead(IRPIN_RIGHT) < 100) {
-    LCD.setCursor(1,2);
-    LCD.print(analogRead(IRPIN_LEFT));
-    LCD.print(" ");
-    LCD.print(analogRead(IRPIN_RIGHT));
-   
-    break;
-  }
- } 
+ while(analogRead(IRPIN_LEFT) > 100 || analogRead(IRPIN_RIGHT) > 100){
+ }
+ LCD.clear();
   count = 0;
+
+
   // drive to tank
-  while (analogRead(QRD_OUTER_LEFT) < THRESH_QRD  && analogRead(QRD_OUTER_RIGHT)< THRESH_QRD) {
+  timer = millis();
+  while(millis() < timer + 6000){
     state = pos.get();
     pid.run(state);
-    if (count == 10) {
-      LCD.clear();
-      LCD.home();
-      LCD.print(analogRead(QRD_RIGHT));
-      LCD.print(" ");
-      LCD.print(analogRead(QRD_LEFT));
-      LCD.print(" ");
-      LCD.print(analogRead(QRD_OUTER_RIGHT));
-      count = 0;
-    }
-    count++;
   }
+  while (analogRead(QRD_OUTER_LEFT) < 300 && analogRead(QRD_OUTER_RIGHT)< 300) {
+    state = pos.get();
+    pid.run(state);
+//    if (count == 10) {
+//      LCD.clear();
+//      LCD.home();
+//      LCD.print(analogRead(QRD_RIGHT));
+//      LCD.print(" ");
+//      LCD.print(analogRead(QRD_LEFT));
+//      LCD.print(" ");
+//      LCD.print(analogRead(QRD_OUTER_RIGHT));
+//      count = 0;
+//    }
+//    count++;
+  }
+  LCD.print("turn");
   pid.stop();
   delay(400); //stops before it turns
-
+  BounceSwitchSide.attach(SWITCH_SIDE);
+  turnOne();
   // turn corner
   LCD.clear();
   LCD.home();
-  LCD.print("Turning");
-
-  turnHigh();
   LCD.clear();
   LCD.home();
   LCD.print("Done");
-  pid.init(20, 0, 50, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
+  pid.init(15, 0, 30, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
 
   //drive to first hashmark
   // might need to do left and right need to test this
   state=-5; //chage dont 5 dont know why
   circle.lstate=state;
-  pid.run(state);
-  while (analogRead(QRD_RIGHT) < THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  while (analogRead(QRD_RIGHT) > THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  while (analogRead(QRD_RIGHT) < THRESH_QRD) {
-    state = circle.get();
-    pid.run(state);
-  }
-  pid.stop();
 
+ while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+    }
+  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+     while(millis() < timer + 100){
+      state = circle.get();
+      pid.run(state);
+    }
+//    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+//      state = circle.get();
+//      if(state > 0){state = 0;}
+//      if(state == -1) {state = -2;}
+//      pid.run(state);
+//    }
+//  while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+//      state = circle.get();
+//      pid.run(state);
+//    }
+
+ pid.stop();
+ LCD.print("d");
  LCD.clear();
  LCD.home();
+
+ // raise arm
  digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
  digitalWrite(MOTOR_LIFT_ON, HIGH);
- //while(digitalRead(SWITCH_LIFTUP) == LOW){}
- while(encoderCount < ENCODER_RAISEARM){
-   //while(true){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){
-         if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-            
-            LCD.print("a");
-            
-            break;
-        }
-      }
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){
-        if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-          
-          LCD.print("b");
-          
-          break;
-        }
-      }
-      if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-          if(digitalRead(SWITCH_LIFTUP) == LOW /*|| digitalRead(SWITCH_LIFTDOWN) == LOW*/){
-            digitalWrite(MOTOR_LIFT_ON, LOW);
-            LCD.print("switch");
-            LCD.print(digitalRead(SWITCH_LIFTUP));
-            LCD.print(" ");
-            LCD.print(digitalRead(SWITCH_LIFTDOWN));
-            break;
-          }
-          
-      }
-      encoderCount++;
-      LCD.clear();
-      LCD.home();
-      LCD.print(encoderCount);
-      
+ BounceLiftUp.update();
+ while(!BounceLiftUp.read()){
+  BounceLiftUp.update();
  }
- 
  digitalWrite(MOTOR_LIFT_ON, LOW);
  digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
- LCD.print(" ");
- LCD.print(encoderCount);
 
  // turn arm
- encoderCount = 0;
+ 
+ BounceSwitchArm.attach(SWITCH_ARM_1);
  motor.speed(MOTOR_ARM, 190);
+ BounceSwitchArm.update();
  //Arm is switches not encoder !!! Needs to change
- while(digitalRead(SWITCH_ARM_1) == LOW){
-//    if(digitalRead(SWITCH_ARM_2) == HIGH){
-//      break;
-//    }
+ while(!BounceSwitchArm.read()){
+    BounceSwitchArm.update();
  }
  motor.speed(MOTOR_ARM, 0);
 
+ digitalWrite(CAR_WASH, HIGH);
  // lower arm
- encoderCount = 0;
+
  digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
  digitalWrite(MOTOR_LIFT_ON, HIGH);
- while(encoderCount < ENCODER_LOWERARM){
-      while(digitalRead(ENCODER_LIFTPIN) == LOW){
-        if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           
-           
-          break;
-          
-        }
-      }
-      while(digitalRead(ENCODER_LIFTPIN) == HIGH){
-        if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           
-          break;
-        }
-      }
-      if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-         if(/*digitalRead(SWITCH_LIFTUP) == LOW ||*/ digitalRead(SWITCH_LIFTDOWN) == LOW){
-           digitalWrite(MOTOR_LIFT_ON, LOW);
-           LCD.print("siwtch2");
-           break;
-         }
-      }
-      encoderCount++;
-      LCD.clear();
-      LCD.home();
-      LCD.print(encoderCount);
-
+ BounceLiftDown.attach(SWITCH_LIFTDOWN);
+ BounceLiftDown.update();
+ BounceLiftMid.attach(SWITCH_LIFTMID);
+ BounceLiftMid.update();
+ while(!BounceLiftMid.read() && !BounceLiftDown.read()){
+    
+    BounceLiftMid.update();
+    BounceLiftDown.update();
  }
  digitalWrite(MOTOR_LIFT_ON, LOW);
  delay(400);
 
- pid.init(20, 0, 50, 1, 130, MOTOR_LEFT, MOTOR_RIGHT);
+
+
+ pid.init(15, .01, 30, 1, 150, MOTOR_LEFT, MOTOR_RIGHT);
+ circle.lstate = -1; //in case robot came off tape while reversing
+ while(hashCount < TOTAL_HASHES){
+//  state = circle.get();
+  
+//  pid.run(state);
  
- while(hashCount < 8){
-  state = circle.get();
-  if(state > 0){state = 0;}
-  if(state == -1) {state = -2;}
-  pid.run(state);
-  if((analogRead(QRD_RIGHT) > THRESH_QRD || analogRead(QRD_LEFT) > THRESH_QRD) && (analogRead(QRD_CIRCLE_RIGHT) > THRESH_QRD || analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) ){
-    delay(50);
-    hashCount++;
-    LCD.clear();
-    LCD.home();
-    LCD.print(hashCount);
-    state = -1;
-    circle.lstate = -1;
+    BounceSwitchSide.update();
+    while(!BounceSwitchSide.rose()){
+      state = circle.get();
+      if(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+        if(state > 0){state = 0;}
+        if(state == -1) {state = -2;}
+      }
+      if(state == 5){state = 2;}
+      pid.run(state);
+      BounceSwitchSide.update();
+    }
+    count = 1;
+    
+    while(!BounceSwitchSide.fell()){
+      state = circle.get();
+      if(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+        if(state > 0){state = 0;}
+        if(state == -1) {state = -2;}
+      }
+      if(state == 5){ state = 2;}
+      pid.run(state);
+      count++;
+      BounceSwitchSide.update();
+    }
+    while(analogRead(QRD_OUTER_LEFT) < THRESH_QRD){
+      state = circle.get();
+      pid.run(state);
+    }
+    count = 1;
+    delay(3);
+    while(analogRead(QRD_OUTER_LEFT) > THRESH_QRD){
+      state = circle.get();
+      if(state > 0){state = 0;}
+      if(state == -1) {state = -2;}
+      pid.run(state);
+      count++;
+    }
+    if(count >= 2){
+     hashCount++;
+     LCD.clear();
+     LCD.home();
+     LCD.print(hashCount);
+    }
+
   }
- }
+
+
+//  while(millis() < timer + 300){
+//   state = circle.get();
+//  if(state > 0){state = 0;}
+//  if(state == -1) {state = -2;}
+//    pid.run(state);
+//  }
  pid.stop();
+ 
+ ziplineOne();
+ 
+ exit(0);
 }
 
+void turnOne(){
+    motor.speed(MOTOR_LEFT, 200);
+  motor.speed(MOTOR_RIGHT, -130); // ONLY FOR 1
+  //motor.speed(MOTOR_RIGHT, 50); // ONLY FOR 2
+  delay(200);
+  LCD.print("flag");
+  while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {} // ONLY FOR 1  
+  while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {} //ONLY FOR 1
+  while (analogRead(QRD_CIRCLE_LEFT) < THRESH_QRD) {}  
+  while (analogRead(QRD_CIRCLE_LEFT) > THRESH_QRD) {}
+    
+  circle.lstate=-5;
+  pid.run(-5);
+}
+
+void ziplineOne(){
+    // raise arm to zipline
+ flag = false;
+ digitalWrite(MOTOR_LIFT_DIRECTION, HIGH);
+ digitalWrite(MOTOR_LIFT_ON, HIGH);
+ BounceLiftUp.attach(SWITCH_LIFTUP);
+ BounceLiftUp.update();
+ while(!BounceLiftUp.read()){
+  BounceLiftUp.update();
+ }
+
+ digitalWrite(MOTOR_LIFT_ON, LOW);
+
+ digitalWrite(CAR_WASH, LOW);
+  // turn arm
+ 
+ BounceSwitchArm2.attach(SWITCH_ARM_2);
+ BounceSwitchArm2.update();
+ motor.speed(MOTOR_ARM, -190);
+ //Arm is switches not encoder !!! Needs to change
+ while(!BounceSwitchArm2.read()){
+    BounceSwitchArm2.update();
+ }
+ motor.speed(MOTOR_ARM, 0);
+ 
+ LCD.print("a");
+ timer = millis();
+ motor.speed(MOTOR_RIGHT,190);
+ motor.speed(MOTOR_LEFT, 170);
+ while(millis() < timer + 800){
+  
+ }
+ motor.speed(MOTOR_RIGHT,100);
+ motor.speed(MOTOR_LEFT, 220);
+ timer = millis();
+ while(millis() < timer + 1500){
+  
+ }
+ motor.speed(MOTOR_RIGHT,140);
+ motor.speed(MOTOR_LEFT, 140);
+ BounceSwitchZipline.attach(SWITCH_ZIPLINE);
+ BounceSwitchZipline.update();
+ while(!BounceSwitchZipline.read()){
+   BounceSwitchZipline.update();
+ }
+ pid.stop();
+ LCD.print("b");
+ // raise body
+ digitalWrite(MOTOR_LIFT_DIRECTION, LOW);
+ digitalWrite(MOTOR_LIFT_ON, HIGH); 
+
+ BounceLiftDown.attach(SWITCH_LIFTDOWN);
+ BounceLiftDown.update();
+ timer = millis();
+ while(true){
+  while(!BounceLiftDown.read()){
+    digitalWrite(MOTOR_LIFT_ON, HIGH);
+    BounceLiftDown.update();
+//    if(millis() > timer + 3000){
+//      motor.speed(MOTOR_LEFT, -255);
+//      motor.speed(MOTOR_RIGHT, -255);
+//    }
+  }
+  digitalWrite(MOTOR_LIFT_ON, LOW);
+  BounceLiftDown.update();
+  
+ }
+}
 

@@ -48,6 +48,15 @@ void loop() {
   LCD.print(analogRead(IRPIN_RIGHT));
   LCD.print(" ");
   LCD.print(analogRead(IRPIN_LEFT));
+//  LCD.print(" ");
+//  LCD.print(analogRead(QRD_CIRCLE_RIGHT));
+//  LCD.setCursor(1,2);
+//  LCD.print(analogRead(QRD_CIRCLE_LEFT));
+//  LCD.print(" ");
+//  LCD.print(analogRead(QRD_OUTER_RIGHT));
+//  LCD.print(" ");
+//  LCD.print(analogRead(QRD_OUTER_LEFT));
+//  LCD.print(" ");
   delay(300);
 
 }

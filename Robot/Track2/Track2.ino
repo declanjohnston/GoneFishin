@@ -37,7 +37,7 @@ void setup()
   initPins();
   // remember to initialize values
   // derivative, integral, proportional,gain, speed
-  pid.init(20, 0, 60, 1, 255, MOTOR_LEFT, MOTOR_RIGHT);
+  pid.init(25, 0, 55, 1, 255, MOTOR_LEFT, MOTOR_RIGHT);
   BounceLiftMid.interval(3);
   BounceLiftUp.interval(3);
   BounceLiftDown.interval(3);
@@ -150,6 +150,11 @@ void loop() {
       state = circle.get();
       pid.run(state);
     }
+  timer = millis();
+  while(millis() < timer + 100){
+      state = circle.get();
+      pid.run(state);
+    }
 
  pid.stop();
  LCD.print("d");
@@ -196,7 +201,7 @@ void loop() {
 
 
 
- pid.init(15, .01, 30, 1, 160, MOTOR_LEFT, MOTOR_RIGHT);
+ pid.init(15, .01, 30, 1, 150, MOTOR_LEFT, MOTOR_RIGHT);
  circle.lstate = -1; //in case robot came off tape while reversing
  while(hashCount < TOTAL_HASHES){
 //  state = circle.get();
@@ -303,8 +308,8 @@ void zipline(){
  motor.speed(MOTOR_ARM, 0);
  
  LCD.print("a");
- motor.speed(MOTOR_RIGHT,140);
- motor.speed(MOTOR_LEFT, 130);
+ motor.speed(MOTOR_RIGHT,145);
+ motor.speed(MOTOR_LEFT, 140);
  BounceSwitchZipline.attach(SWITCH_ZIPLINE);
  BounceSwitchZipline.update();
  while(!BounceSwitchZipline.read()){
@@ -323,10 +328,10 @@ void zipline(){
   while(!BounceLiftDown.read()){
     digitalWrite(MOTOR_LIFT_ON, HIGH);
     BounceLiftDown.update();
-    if(millis() > timer + 3000){
-      motor.speed(MOTOR_LEFT, -255);
-      motor.speed(MOTOR_RIGHT, -255);
-    }
+//    if(millis() > timer + 3000){
+//      motor.speed(MOTOR_LEFT, -255);
+//      motor.speed(MOTOR_RIGHT, -255);
+//    }
   }
   digitalWrite(MOTOR_LIFT_ON, LOW);
   BounceLiftDown.update();

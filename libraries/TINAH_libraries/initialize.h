@@ -13,9 +13,9 @@
 #define THRESH_TIMER 1400 // need to determine experimentally
 #define THRESH_QRD 100
 #define IRPIN_LEFT 7
-#define IRPIN_RIGHT 0
+#define IRPIN_RIGHT 2
 #define QRD_LEFT 3
-#define QRD_RIGHT 2
+#define QRD_RIGHT 0
 #define QRD_CIRCLE_LEFT 5
 #define QRD_CIRCLE_RIGHT 4
 #define QRD_OUTER_RIGHT 1
